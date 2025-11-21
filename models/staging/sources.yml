@@ -1,0 +1,336 @@
+version: 2
+
+sources:
+  - name: subscription_mgmt
+    schema: SUBSCRIPTION_MGMT
+    tables:
+
+      - name: ASSOCIATION_TYPE
+        columns:
+          - name: ID
+            tests:
+              - not_null
+              - unique
+          - name: CATEGORY
+            tests:
+              - not_null
+          - name: NAME
+            tests:
+              - not_null
+          - name: LABEL
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+          - name: _FIVETRAN_DELETED
+            tests:
+              - accepted_values:
+                  values: ['FALSE']
+
+      - name: COMPANY
+        columns:
+          - name: ID
+            tests:
+              - not_null
+              - unique
+          - name: PROPERTY_CREATEDATE
+            tests:
+              - not_null
+          - name: PROPERTY_NAME
+            tests:
+              - not_null
+          - name: PROPERTY_DOMAIN
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+          - name: _FIVETRAN_DELETED
+            tests:
+              - accepted_values:
+                  values: ['FALSE']
+          - name: IS_DELETED
+            tests:
+              - accepted_values:
+                  values: ['FALSE','TRUE']
+
+      - name: COMPANY_PROPERTY_HISTORY
+        columns:
+          - name: COMPANY_ID
+            tests:
+              - not_null
+          - name: NAME
+            tests:
+              - not_null
+          - name: TIMESTAMP
+            tests:
+              - not_null
+          - name: VALUE
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: CONTACT
+        columns:
+          - name: ID
+            tests:
+              - not_null
+              - unique
+          - name: PROPERTY_EMAIL
+            tests:
+              - not_null
+          - name: PROPERTY_FIRSTNAME
+            tests:
+              - not_null
+          - name: PROPERTY_LASTNAME
+            tests:
+              - not_null
+          - name: PROPERTY_CREATEDATE
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+          - name: _FIVETRAN_DELETED
+            tests:
+              - accepted_values:
+                  values: ['FALSE']
+          - name: IS_DELETED
+            tests:
+              - accepted_values:
+                  values: ['FALSE','TRUE']
+
+      - name: CONTACT_COMPANY
+        columns:
+          - name: CONTACT_ID
+            tests:
+              - not_null
+          - name: COMPANY_ID
+            tests:
+              - not_null
+          - name: CATEGORY
+            tests:
+              - not_null
+          - name: TYPE_ID
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: CONTACT_PROPERTY_HISTORY
+        columns:
+          - name: CONTACT_ID
+            tests:
+              - not_null
+          - name: NAME
+            tests:
+              - not_null
+          - name: TIMESTAMP
+            tests:
+              - not_null
+          - name: VALUE
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: DEAL
+        columns:
+          - name: DEAL_ID
+            tests:
+              - not_null
+              - unique
+          - name: DEAL_PIPELINE_ID
+            tests:
+              - not_null
+          - name: DEAL_PIPELINE_STAGE_ID
+            tests:
+              - not_null
+          - name: PROPERTY_CREATEDATE
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+          - name: _FIVETRAN_DELETED
+            tests:
+              - accepted_values:
+                  values: ['FALSE']
+          - name: IS_DELETED
+            tests:
+              - accepted_values:
+                  values: ['FALSE','TRUE']
+
+      - name: DEAL_COMPANY
+        columns:
+          - name: DEAL_ID
+            tests:
+              - not_null
+          - name: COMPANY_ID
+            tests:
+              - not_null
+          - name: CATEGORY
+            tests:
+              - not_null
+          - name: TYPE_ID
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: DEAL_CONTACT
+        columns:
+          - name: DEAL_ID
+            tests:
+              - not_null
+          - name: CONTACT_ID
+            tests:
+              - not_null
+          - name: CATEGORY
+            tests:
+              - not_null
+          - name: TYPE_ID
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: DEAL_DEAL
+        columns:
+          - name: FROM_DEAL_ID
+            tests:
+              - not_null
+          - name: TO_DEAL_ID
+            tests:
+              - not_null
+          - name: CATEGORY
+            tests:
+              - not_null
+          - name: TYPE_ID
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: DEAL_PIPELINE
+        columns:
+          - name: PIPELINE_ID
+            tests:
+              - not_null
+              - unique
+          - name: LABEL
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: DEAL_PIPELINE_STAGE
+        columns:
+          - name: STAGE_ID
+            tests:
+              - not_null
+              - unique
+          - name: LABEL
+            tests:
+              - not_null
+          - name: PIPELINE_ID
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: DEAL_PROPERTY_HISTORY
+        columns:
+          - name: DEAL_ID
+            tests:
+              - not_null
+          - name: NAME
+            tests:
+              - not_null
+          - name: TIMESTAMP
+            tests:
+              - not_null
+          - name: VALUE
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: DEAL_STAGE
+        columns:
+          - name: DEAL_ID
+            tests:
+              - not_null
+          - name: VALUE
+            tests:
+              - not_null
+          - name: DATE_ENTERED
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: LINE_ITEM
+        columns:
+          - name: ID
+            tests:
+              - not_null
+              - unique
+          - name: PRODUCT_ID
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+          - name: _FIVETRAN_DELETED
+            tests:
+              - accepted_values:
+                  values: ['FALSE']
+
+      - name: LINE_ITEM_DEAL
+        columns:
+          - name: LINE_ITEM_ID
+            tests:
+              - not_null
+          - name: DEAL_ID
+            tests:
+              - not_null
+          - name: CATEGORY
+            tests:
+              - not_null
+          - name: TYPE_ID
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null
+
+      - name: LINE_ITEM_PROPERTY_HISTORY
+        columns:
+          - name: LINE_ITEM_ID
+            tests:
+              - not_null
+          - name: NAME
+            tests:
+              - not_null
+          - name: TIMESTAMP
+            tests:
+              - not_null
+          - name: VALUE
+            tests:
+              - not_null
+          - name: _FIVETRAN_SYNCED
+            tests:
+              - not_null

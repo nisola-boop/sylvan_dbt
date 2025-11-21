@@ -1,0 +1,27 @@
+version: 2
+
+tests:
+  - dbt_utils.source_not_null:
+      source_name: subscription_mgmt
+      table_name: COMPANY
+      column_name: ID
+
+  - dbt_utils.source_unique:
+      source_name: subscription_mgmt
+      table_name: COMPANY
+      column_name: ID
+
+  - dbt_utils.source_not_null:
+      source_name: subscription_mgmt
+      table_name: COMPANY
+      column_name: PROPERTY_NAME
+
+  - dbt_utils.source_not_null:
+      source_name: subscription_mgmt
+      table_name: COMPANY
+      column_name: PROPERTY_CREATEDATE
+
+  - dbt_utils.source_not_null:
+      source_name: subscription_mgmt
+      table_name: COMPANY
+      column_name: PROPERTY_HS_LASTMODIFIEDDATE
