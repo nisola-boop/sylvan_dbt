@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: "0 13 * * *" 
+    - cron: "0 13 * * *"   # Runs daily at 8 AM ET (13:00 UTC)
 
 jobs:
   run_dbt:
@@ -54,4 +54,14 @@ jobs:
         run: dbt deps
 
       - name: Run dbt tests
+        id: dbt_tests
         run: dbt test --target ci
+
+      # --------------------------------------------------
+      # NEW: Failure alert
+      # --------------------------------------------------
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ dbt tests failed in GitHub Actions" 
+          echo "::error::dbt tests failed. Check workflow logs."
