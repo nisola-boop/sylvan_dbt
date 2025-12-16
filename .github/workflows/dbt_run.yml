@@ -36,13 +36,8 @@ jobs:
           pip install --upgrade pip
           pip install dbt-snowflake==1.10.3
 
-      - name: Write Snowflake private key to file
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SNOWFLAKE_PRIVATE_KEY" > ~/.ssh/snowflake_private_key.p8
-          chmod 600 ~/.ssh/snowflake_private_key.p8
-
-      - name: Create dbt profiles.yml
+      # 🔥 THIS IS THE IMPORTANT FIX
+      - name: Create dbt profiles.yml (JWT auth, no key file)
         run: |
           mkdir -p profiles
           cat <<EOF > profiles/profiles.yml
@@ -51,19 +46,19 @@ jobs:
             outputs:
               prod:
                 type: snowflake
-                account: ${SNOWFLAKE_ACCOUNT}
-                user: ${SNOWFLAKE_USER}
-                role: ${SNOWFLAKE_ROLE}
-                database: ${SNOWFLAKE_DATABASE}
-                warehouse: ${SNOWFLAKE_WAREHOUSE}
-                schema: ${SNOWFLAKE_SCHEMA}
+                account: "${SNOWFLAKE_ACCOUNT}"
+                user: "${SNOWFLAKE_USER}"
+                role: "${SNOWFLAKE_ROLE}"
+                database: "${SNOWFLAKE_DATABASE}"
+                warehouse: "${SNOWFLAKE_WAREHOUSE}"
+                schema: "${SNOWFLAKE_SCHEMA}"
                 threads: 4
-                private_key_path: ~/.ssh/snowflake_private_key.p8
+                authenticator: snowflake_jwt
+                private_key: "${SNOWFLAKE_PRIVATE_KEY}"
           EOF
 
       - name: dbt deps
         run: dbt deps
 
       - name: dbt run – fct_deal_subscription
-        run: |
-          dbt run --select fct_deal_subscription
+        run: dbt run --select fct_deal_subscription
