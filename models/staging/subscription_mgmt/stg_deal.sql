@@ -3,6 +3,10 @@ with source as (
     select *
     from {{ source('subscription_mgmt', 'DEAL') }}
 
+    -- 🔴 THIS IS THE FIX
+    -- Exclude HubSpot deals that were deleted and flagged by Fivetran
+    where coalesce(_fivetran_deleted, false) = false
+
 ),
 
 renamed as (
@@ -41,7 +45,7 @@ renamed as (
         property_billing_frequency as billing_frequency,
         property_booking_date as booking_date,
 
-        -- Usage data (new HubSpot property)
+        -- Usage data
         property_usage_data as usage_data,
 
         -- Renewal details
@@ -90,4 +94,5 @@ renamed as (
     from source
 )
 
-select * from renamed
+select *
+from renamed
