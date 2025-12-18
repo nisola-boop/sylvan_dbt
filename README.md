@@ -78,15 +78,12 @@ Install dependencies:
 dbt deps
 
 Run models:
-
 dbt run
 
 Run tests:
-
 dbt test
 
 Run everything:
-
 dbt build
 
 
