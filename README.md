@@ -1,295 +1,141 @@
-# sylvan_dbt
+# Sylvan dbt Project
 
-This repository contains the **dbt project for Sylvan’s Subscription Management analytics**.
-It models, tests, and documents data flowing into Snowflake from HubSpot, Airtable, and
-related operational systems.
+## Overview
+This repository contains the **production dbt transformation layer** for Sylvan’s subscription, deal, and invoicing analytics.  
+It runs on **Snowflake**, ingests data from **HubSpot and Airtable via Fivetran**, and produces analytics-ready tables used across Finance, RevOps, and Customer Success.
 
-This repo has evolved from a test-only setup into a **production-grade dbt project**
-that supports shared ownership, CI enforcement, and extensible business logic.
-
----
-
-## What This Repository Does
-
-- Declares **Snowflake sources** synced via Fivetran (HubSpot, Airtable)
-- Builds **staging models** for cleaned, typed, analytics-ready data
-- Builds **mart models** that implement business logic
-- Runs **automated dbt tests** locally and in CI
-- Generates dbt documentation for visibility and review
+This is a **live, deployed production project**. Changes flow through GitHub and are deployed via CI only.
 
 ---
 
-## Key Model
+## Stack
+- **Warehouse:** Snowflake  
+- **Transformation:** dbt (v1.11.0-rc1)  
+- **Ingestion:** Fivetran (HubSpot + Airtable)  
+- **CI/CD:** GitHub Actions  
+
+---
+
+## Core Models
 
 ### `fct_deal_subscription`
+**Materialization:** `table`  
+**Purpose:** Canonical subscription fact table for analytics and reporting.
 
-Primary fact table used for subscription and invoicing analytics.
+**Key characteristics:**
+- Built from HubSpot staging models (`stg_deal`, `stg_company`, etc.)
+- Enriched with invoice data from Airtable
+- Join key:  
+  `airtable.INVOICES.associated_hubspot_deal_id → hubspot.deal_id`
 
-This model combines:
-- HubSpot deal data
-- Contract terms and billing logic
-- Airtable invoice records
-
-It computes:
-- Subscription start and end dates
-- Invoice cadence by billing frequency
-- Invoices raised vs. remaining
-- Next invoice to raise
-
-Location:
-
-models/marts/subscription_mgmt/fct_deal_subscription.sql
-
----
-
-## Project Structure
-
-.
-├── models/
-│   ├── staging/
-│   │   ├── hubspot/
-│   │   └── airtable/
-│   └── marts/
-│       └── subscription_mgmt/
-├── tests/
-├── macros/
-├── snapshots/
-├── analyses/
-├── dbt_project.yml
-├── packages.yml
-├── README.md
-└── CONTRIBUTING.md
+**Important logic constraints (intentional):**
+- `contract_start_date` and `contract_end_date` **do not exist**
+- Subscription timing is derived only from:
+  - `booking_date`
+  - `contract_term_months`
+  - `free_trial_duration`
+  - `free_trial_placement`
+- `next_invoice_to_raise`:
+  - Returns `NULL` when all invoices are raised
+  - Never returns placeholder strings (e.g. `"Complete"`)
 
 ---
 
-## Running Locally
-
-### Requirements
-
-- Python 3.10+
-- dbt-snowflake
-- Snowflake access
-- Valid `~/.dbt/profiles.yml`
-
-### Commands
-
-Install dependencies:
-```bash
-dbt deps
-
-Run models:
-dbt run
-
-Run tests:
-dbt test
-
-Run everything:
-dbt build
-
-
-⸻
-
-Continuous Integration (CI)
-
-This repository includes a GitHub Actions workflow that:
-	1.	Creates a temporary dbt profile
-	2.	Installs dependencies
-	3.	Runs dbt models and tests
-	4.	Fails on breaking issues
-
-Workflow location:
-
-.github/workflows/run_dbt.yml
-
-You can also trigger it manually via:
-Actions → Run dbt → Run workflow
-
-⸻
-
-Required GitHub Secrets
-
-Under Settings → Secrets → Actions, configure:
-	•	SNOWFLAKE_ACCOUNT
-	•	SNOWFLAKE_USER
-	•	SNOWFLAKE_ROLE
-	•	SNOWFLAKE_WAREHOUSE
-	•	SNOWFLAKE_DATABASE
-	•	SNOWFLAKE_SCHEMA
-	•	SNOWFLAKE_PRIVATE_KEY
-
-These secrets are used exclusively by CI.
-
-⸻
-
-Documentation
-
-Generate and view dbt docs locally:
-
-dbt docs generate
-dbt docs serve
-
-
-⸻
-
-Contribution Rules
-
-All contributors must follow the guidelines in CONTRIBUTING.md.
-
-Direct commits to main are not allowed.
-
-⸻
-
-Ownership & Intent
-
-This repository is a shared production analytics asset.
-
-Treat it like application code:
-	•	Small, intentional changes
-	•	Clear documentation
-	•	Validation before merge
+## Sources
+- **HubSpot:** via Fivetran staging models
+- **Airtable:**  
+  - Source: `airtable_sylvan_customer_management`  
+  - Table: `INVOICES`
 
 ---
 
-### `CONTRIBUTING.md`
-
-```md
-# Contributing to sylvan_dbt
-
-This document defines **how teammates should safely edit and extend this dbt project**.
-
-The goal is to enable fast iteration **without breaking production analytics**.
+## Environments
+- **Database:** `SYLVAN_INTERNAL_DATABASE`
+- **Schema:** `SUBSCRIPTION_MGMT_DBT`
+- **Warehouse:** `SYLVAN_INTERNAL`
+- **Role:** `DBT_SYLVAN_ROLE`
 
 ---
 
-## Core Rules
+## Running dbt (Production)
+All production runs happen via **GitHub Actions**.
 
-1. Do NOT commit directly to `main`
-2. Do NOT edit Snowflake tables manually
-3. All transformations must live in dbt
-4. Tests protect downstream users — do not remove casually
-5. Git history is part of the system of record
+1. Go to **GitHub → Actions**
+2. Select the dbt workflow
+3. Manually trigger the run
+4. CI executes:
+   - `dbt build`
+   - `dbt test`
+
+No manual dbt runs are performed directly against production.
 
 ---
 
-## Branching Workflow
+## Notes
+- Some source tests are expected to fail and are currently accepted.
+- This repository has transitioned from tests-only to a **full transformation project**.
+- Treat all changes as production-impacting.
 
-Always create a feature branch:
+---
 
+# CONTRIBUTING
+
+## Ground Rules
+This is a production analytics repository. Changes should be **intentional, minimal, and reviewable**.
+
+Do **not**:
+- Re-architect existing models without alignment
+- Invent new fields or business logic
+- Run dbt directly in production outside CI
+
+---
+
+## Making Changes
+
+### 1. Create a Branch
 ```bash
 git checkout -b feature/<short-description>
 
-Examples:
-	•	feature/add-invoice-logic
-	•	feature/update-renewal-calcs
-	•	feature/airtable-schema-fix
+2. Edit Models
+	•	Update models under models/
+	•	Follow existing patterns and naming conventions
+	•	Preserve existing business logic unless explicitly changing it
 
-Open a Pull Request when ready.
+3. Test Locally
 
-⸻
-
-Editing Guidelines
-
-Staging Models (models/staging/)
-
-Purpose
-	•	Clean raw source data
-	•	Rename columns
-	•	Cast types
-	•	Filter deleted records
-
-Rules
-	•	No aggregations
-	•	No metrics
-	•	No business logic
-
-If you are unsure whether logic belongs here — it does not.
+Before opening a PR: dbt build
+Focus on:
+	•	Model compilation
+	•	Downstream impact
+	•	Tests relevant to your changes
 
 ⸻
 
-Mart Models (models/marts/)
+Pull Requests
 
-Purpose
-	•	Business logic
-	•	Metrics
-	•	Analytics-ready tables
+PRs should include:
+	•	Clear description of what changed and why
+	•	Callouts for any logic changes
+	•	Confirmation that dbt build was run locally
 
-Rules
-	•	Use readable, well-named CTEs
-	•	Comment non-obvious logic
-	•	Avoid hardcoding assumptions unless explicitly documented
-	•	Prefer incremental complexity over monolithic queries
+Avoid large, unfocused PRs.
 
 ⸻
 
-Sources (sources.yml)
+Deployment
 
-Purpose
-	•	Declare upstream tables exactly as they exist in Snowflake
+Deployment is handled only through GitHub Actions.
 
-Rules
-	•	No transformations
-	•	No renaming
-	•	Update only when upstream schemas change
+To deploy:
+	1.	Merge your PR into the main branch
+	2.	Go to GitHub → Actions
+	3.	Manually trigger the dbt workflow
 
-If a source changes:
-	1.	Update sources.yml
-	2.	Update downstream models
-	3.	Run dbt build
+This will rebuild and test production tables in Snowflake.
 
 ⸻
 
-Tests
+Rollbacks
 
-Purpose
-	•	Catch regressions early
-	•	Protect dashboards and stakeholders
-
-Rules
-	•	Do not delete failing tests without explanation
-	•	If upstream data breaks a test, document it in the PR
-	•	Prefer relaxing tests only when justified
-
-Temporary failures are acceptable only when clearly explained.
-
-⸻
-
-Local Validation
-
-Before opening a PR, run:
-
-dbt deps
-dbt run
-dbt test
-
-Or scope validation:
-
-dbt run --select <model>
-dbt test --select <model>
-
-
-⸻
-
-Pull Request Requirements
-
-Each PR must include:
-	•	What changed
-	•	Why it changed
-	•	What was validated locally
-	•	Known test failures (if any)
-
-Example:
-
-Unified invoice logic to use Airtable INVOICES source.
-fct_deal_subscription builds successfully.
-Two source tests fail due to upstream null emails — tracked separately.
-
-⸻
-
-CI Expectations
-
-Pull Requests will be blocked if:
-	•	Models fail to compile
-	•	Critical tests fail
-	•	Sources are misdeclared
-
-CI exists to protect shared ownership. Respect it.
+Rollback = revert the commit and re-run the GitHub Action.
+There is no manual intervention in Snowflake.
